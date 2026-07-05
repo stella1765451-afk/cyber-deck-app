@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CYBER-DECK // 标签矩阵终端 V4.5 (云端部署版)</title>
+    <title>CYBER-DECK // 标签矩阵终端 V4.5 (实时记忆版)</title>
     <style>
         :root {
             --bg-color: #0a0c10; --panel-bg: #121620;
@@ -114,7 +114,7 @@
 
     <header>
         <h1>CYBER - DECK</h1>
-        <div class="subtitle">神经漫游者终端 V4.5 (云端部署版)</div>
+        <div class="subtitle">神经漫游者终端 V4.5 (实时记忆版)</div>
         
         <div class="cloud-console">
             <button class="cyber-btn" onclick="exportData()">💾 导出备份</button>
@@ -154,14 +154,15 @@
         <div class="node-list" id="nodeListContainer"></div>
     </div>
 
+    <!-- 同步设置弹窗：新增了 oninput 监听器，实现实时打字实时保存 -->
     <div class="drawer-overlay" id="syncOverlay" onclick="closeSyncModal()"></div>
     <div class="sync-modal" id="syncModal">
         <h3>☁️ 神经连接配置 (GitHub API)</h3>
         <p>配置仅保存在当前浏览器的本地缓存中，绝对安全，不会上传至任何公共网络。</p>
-        <input type="text" id="ghToken" class="search-input" placeholder="GitHub Personal Access Token">
-        <input type="text" id="ghOwner" class="search-input" placeholder="GitHub 用户名 (如: yourname)">
-        <input type="text" id="ghRepo" class="search-input" placeholder="仓库名 (如: cyber-deck-data)">
-        <input type="text" id="ghPath" class="search-input" placeholder="文件路径 (如: games.json)">
+        <input type="text" id="ghToken" class="search-input" placeholder="GitHub Personal Access Token" oninput="saveGhConfig()">
+        <input type="text" id="ghOwner" class="search-input" placeholder="GitHub 用户名 (如: yourname)" oninput="saveGhConfig()">
+        <input type="text" id="ghRepo" class="search-input" placeholder="仓库名 (如: cyber-deck-data)" oninput="saveGhConfig()">
+        <input type="text" id="ghPath" class="search-input" placeholder="文件路径 (如: games.json)" oninput="saveGhConfig()">
         
         <div style="display: flex; gap: 10px; margin-top: 15px;">
             <button class="cyber-btn" style="flex: 1;" onclick="pullFromGitHub()">⬇️ 从云端拉取</button>
@@ -485,7 +486,6 @@
             event.target.value = ''; 
         }
 
-        // [核心升级] 录入逻辑支持覆盖升级旧游戏，并自动触发推送
         function addNewGameFromJSON() {
             const jsonString = prompt("【CYBER-DECK 数据录入端口】\n请在此粘贴单款游戏的 JSON 数据对象：");
             if (!jsonString) return; 
@@ -496,7 +496,6 @@
                     return;
                 }
 
-                // 检查游戏是否已存在
                 const existingIndex = gameData.findIndex(g => g.id === newGame.id);
                 
                 if (existingIndex !== -1) {
@@ -508,7 +507,7 @@
                     }
                     if (typeof newGame.shelved !== 'boolean') newGame.shelved = false;
                     
-                    gameData[existingIndex] = newGame; // 覆盖替换
+                    gameData[existingIndex] = newGame; 
                     alert(`✅ 升级成功：已将 [${newGame.name}] 细化为子章节模式！`);
                 } else {
                     if (!newGame.progress || newGame.progress.length !== newGame.nodes.length) {
@@ -516,7 +515,7 @@
                     }
                     if (typeof newGame.shelved !== 'boolean') newGame.shelved = false;
                     
-                    gameData.unshift(newGame); // 插入新游戏
+                    gameData.unshift(newGame); 
                     alert(`✅ 录入成功：${newGame.name}`);
                 }
                 
@@ -524,7 +523,6 @@
                 renderFilters();
                 renderLibrary(document.getElementById('searchInput').value);
 
-                // 自动触发询问：是否推送到 GitHub
                 if(confirm("是否立即将此次数据的升级变动【⬆️ 推送至 GitHub 云端】保存？\n(如果你已经配置好 Token，点击确定将自动上传)")) {
                     pushToGitHub();
                 }
@@ -536,6 +534,7 @@
 
         const GH_CONFIG_KEY = 'cyber_deck_gh_config';
 
+        // [核心修改]：优化实时记忆加载
         function openSyncModal() {
             document.getElementById('syncOverlay').classList.add('active');
             document.getElementById('syncModal').classList.add('active');
@@ -551,6 +550,7 @@
             document.getElementById('syncModal').classList.remove('active');
         }
 
+        // [核心修改]：只要一打字，配置就会立即被序列化写死到设备本地缓存中
         function saveGhConfig() {
             const config = {
                 token: document.getElementById('ghToken').value.trim(),
