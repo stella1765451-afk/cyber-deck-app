@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CYBER-DECK // 神经漫游者终端 V5.2</title>
+    <title>CYBER-DECK // 神经漫游者终端 V5.3</title>
     <style>
         :root {
             --bg-color: #0a0c10; --panel-bg: #121620;
@@ -15,12 +15,22 @@
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg-color); color: var(--text-main); font-family: 'Segoe UI', system-ui, sans-serif; padding-bottom: 30px; overflow-x: hidden; }
 
-        header { background: linear-gradient(180deg, rgba(18,22,32,1) 0%, rgba(10,12,16,1) 100%); padding: 20px 15px 10px; text-align: center; position: sticky; top: 0; z-index: 100; }
+        header { background: linear-gradient(180deg, rgba(18,22,32,1) 0%, rgba(10,12,16,1) 100%); padding: 20px 15px 10px; text-align: center; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.02);}
         header h1 { font-size: 1.4rem; letter-spacing: 3px; color: #fff; text-shadow: 0 0 10px var(--cyber-blue); font-weight: 900; }
-        header .subtitle { font-size: 0.7rem; color: var(--cyber-pink); letter-spacing: 2px; margin-top: 5px; text-transform: uppercase; margin-bottom: 15px; }
+        
+        /* 顶部副标题与图标同行布局 */
+        .header-sub-row { position: relative; display: flex; justify-content: center; align-items: center; margin-top: 5px; margin-bottom: 15px; height: 30px; }
+        .subtitle { font-size: 0.7rem; color: var(--cyber-pink); letter-spacing: 2px; text-transform: uppercase; }
+        .header-actions { position: absolute; right: 0; display: flex; gap: 15px; align-items: center; }
+        .icon-btn { background: none; border: none; color: var(--text-dim); font-size: 1.2rem; cursor: pointer; transition: all 0.3s; outline: none; text-shadow: 0 0 5px transparent; }
+        .icon-btn:hover, .icon-btn.active { color: var(--cyber-blue); text-shadow: 0 0 10px var(--cyber-blue); transform: scale(1.1); }
 
-        .settings-bar { margin-bottom: 10px; }
-        .cloud-console { display: none; gap: 8px; padding: 0 15px 15px; justify-content: center; flex-wrap: wrap; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 10px; animation: fadeIn 0.3s ease-out; }
+        .search-container { max-height: 0; overflow: hidden; transition: max-height 0.3s cubic-bezier(0, 1, 0, 1); opacity: 0; }
+        .search-container.active { max-height: 60px; opacity: 1; transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in-out; margin-bottom: 10px; }
+        .search-input { width: 100%; background: var(--panel-bg); border: 1px solid var(--text-dim); padding: 10px 15px; border-radius: 6px; color: white; outline: none; }
+        .search-input:focus { border-color: var(--cyber-blue); box-shadow: 0 0 10px rgba(0, 242, 254, 0.3); }
+
+        .cloud-console { display: none; gap: 8px; padding: 0 5px 15px; justify-content: center; flex-wrap: wrap; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 10px; animation: fadeIn 0.3s ease-out; }
         .cloud-console.active { display: flex; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
         
@@ -30,22 +40,18 @@
         .btn-stats { border-color: var(--cyber-orange); color: var(--cyber-orange); }
         .btn-stats:hover { background: rgba(255, 87, 34, 0.1); }
 
-        .search-input { width: 100%; background: var(--panel-bg); border: 1px solid var(--text-dim); padding: 12px 15px; border-radius: 6px; color: white; outline: none; margin-bottom: 10px; }
-        .search-input:focus { border-color: var(--cyber-blue); box-shadow: 0 0 10px rgba(0, 242, 254, 0.3); }
-
-        .filter-container { display: flex; overflow-x: auto; gap: 8px; padding-bottom: 15px; border-bottom: 2px solid rgba(0, 242, 254, 0.3); scrollbar-width: none; }
+        .filter-container { display: flex; overflow-x: auto; gap: 8px; padding-bottom: 10px; scrollbar-width: none; }
         .filter-container::-webkit-scrollbar { display: none; } 
         
         .filter-tag { padding: 6px 14px; border-radius: 20px; background: rgba(255,255,255,0.05); color: var(--text-dim); font-size: 0.8rem; border: 1px solid transparent; white-space: nowrap; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
         .filter-tag.active { background: rgba(0, 242, 254, 0.1); border-color: var(--cyber-blue); color: var(--cyber-blue); text-shadow: 0 0 5px var(--cyber-blue); }
         
-        /* 状态专属滤镜颜色 */
         .filter-tag.special-backlog.active { border-color: #94a3b8; color: #cbd5e1; text-shadow: 0 0 5px #94a3b8; background: rgba(148, 163, 184, 0.1); }
         .filter-tag.special-playing.active { border-color: var(--cyber-blue); color: var(--cyber-blue); text-shadow: 0 0 5px var(--cyber-blue); background: rgba(0, 242, 254, 0.1); }
         .filter-tag.special-completed.active { border-color: var(--cyber-green); color: var(--cyber-green); text-shadow: 0 0 5px var(--cyber-green); background: rgba(0, 255, 135, 0.1); }
         .filter-tag.special-shelved.active { border-color: var(--cyber-orange); color: var(--cyber-orange); text-shadow: 0 0 5px var(--cyber-orange); background: rgba(255, 87, 34, 0.1); }
 
-        /* --- 赛博朋克数据面板 CSS --- */
+        /* Dashboard & Heatmap */
         .dashboard-panel { display: none; padding: 15px; background: rgba(10,12,16,0.95); border-bottom: 2px solid var(--cyber-orange); box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
         .dashboard-panel.active { display: block; animation: slideDown 0.3s ease-out; }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
@@ -63,27 +69,24 @@
         .heatmap-col { display: flex; flex-direction: column; gap: 4px; }
         .heatmap-cell { width: 12px; height: 12px; border-radius: 2px; background: rgba(255,255,255,0.05); transition: 0.2s; position: relative; cursor: crosshair; }
         .heatmap-cell:hover { transform: scale(1.2); z-index: 10; border: 1px solid rgba(255,255,255,0.8); }
-        
         .heatmap-cell.level-1 { background: rgba(0, 255, 135, 0.3); box-shadow: 0 0 5px rgba(0, 255, 135, 0.1); }
         .heatmap-cell.level-2 { background: rgba(0, 255, 135, 0.6); box-shadow: 0 0 8px rgba(0, 255, 135, 0.3); }
         .heatmap-cell.level-3 { background: rgba(0, 255, 135, 0.9); box-shadow: 0 0 12px rgba(0, 255, 135, 0.6); }
         .heatmap-cell.level-4 { background: #fff; box-shadow: 0 0 10px #fff, 0 0 15px var(--cyber-green); }
 
         .grid-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 15px; }
-        .game-card { background: var(--panel-bg); border-radius: 6px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.05); display: flex; flex-direction: column; position: relative; transition: transform 0.2s; cursor: pointer;}
+        .game-card { background: var(--panel-bg); border-radius: 6px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.05); display: flex; flex-direction: column; position: relative; transition: transform 0.2s; cursor: pointer; user-select: none; -webkit-user-select: none; }
         .game-card:active { transform: scale(0.95); }
         
-        /* 游戏卡片状态滤镜 */
         .game-card.status-shelved .poster-img { filter: grayscale(80%) sepia(20%) hue-rotate(180deg) opacity(0.6); }
         .game-card.status-backlog .poster-img { filter: grayscale(50%) brightness(0.8); }
         .game-card.status-completed { border-color: rgba(0, 255, 135, 0.4); }
         .game-card.status-playing { border-color: rgba(0, 242, 254, 0.3); }
 
         .poster-wrapper { width: 100%; aspect-ratio: 1 / 1; position: relative; background: #1a2030; overflow: hidden; border-bottom: 2px solid rgba(0, 242, 254, 0.2); }
-        .poster-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: filter 0.3s; }
+        .poster-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: filter 0.3s; pointer-events: none; }
         .poster-placeholder { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1e2640 0%, #0f1322 100%); color: rgba(255,255,255,0.1); font-size: 2rem; }
 
-        /* 状态徽章 */
         .badge-status { position: absolute; top: 5px; right: 5px; font-size: 0.6rem; padding: 3px 6px; font-weight: bold; border-radius: 4px; backdrop-filter: blur(2px); z-index: 10; display: flex; align-items: center; gap: 4px; border: 1px solid transparent; }
         .badge-completed { background: rgba(0, 255, 135, 0.2); border-color: var(--cyber-green); color: var(--cyber-green); box-shadow: 0 0 5px rgba(0, 255, 135, 0.5); }
         .badge-playing { background: rgba(0, 242, 254, 0.2); border-color: var(--cyber-blue); color: var(--cyber-blue); box-shadow: 0 0 5px rgba(0, 242, 254, 0.5); }
@@ -99,6 +102,7 @@
         .mini-progress-bar { height: 100%; background: var(--cyber-green); width: 0%; transition: width 0.3s; box-shadow: 0 0 5px var(--cyber-green); }
         .mini-progress-text { font-size: 0.65rem; color: var(--cyber-green); margin-top: 2px; text-align: right; }
 
+        /* Drawer details */
         .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
         .drawer-overlay.active { opacity: 1; pointer-events: auto; }
         .drawer { position: fixed; bottom: 0; left: 0; width: 100%; height: 85vh; background: var(--panel-bg); border-top: 3px solid var(--cyber-blue); box-shadow: 0 -5px 25px rgba(0,242,254,0.3); border-top-left-radius: 16px; border-top-right-radius: 16px; z-index: 201; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.1, 0.7, 0.1, 1); display: flex; flex-direction: column; }
@@ -108,7 +112,6 @@
         .drawer-game-title { font-size: 1.2rem; color: white; padding-right: 30px; }
         .drawer-game-meta { font-size: 0.75rem; color: var(--cyber-pink); margin-top: 6px; display: flex; justify-content: space-between; align-items: center; }
 
-        /* 状态选择器 UI */
         .status-selector { display: flex; gap: 5px; background: rgba(0,0,0,0.3); padding: 4px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); }
         .status-btn { font-size: 0.7rem; padding: 4px 8px; border-radius: 4px; cursor: pointer; color: var(--text-dim); transition: all 0.2s; border: 1px solid transparent; display: flex; align-items: center; justify-content: center;}
         .status-btn.active.backlog { background: rgba(148, 163, 184, 0.2); color: #e2e8f0; border-color: #94a3b8; }
@@ -122,24 +125,19 @@
         .detail-progress-fill { height: 100%; background: linear-gradient(90deg, var(--cyber-blue), var(--cyber-green)); width: 0%; transition: width 0.3s; box-shadow: 0 0 8px var(--cyber-blue); }
 
         .node-list { flex-grow: 1; overflow-y: auto; padding: 10px 20px 30px 20px; }
-        
         .node-group { margin-bottom: 4px; }
         .node-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: background 0.2s; }
         .node-header:active { background: rgba(255,255,255,0.05); }
-        
         .node-header-left { display: flex; align-items: center; gap: 10px; flex-grow: 1; }
         .chevron { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-size: 0.7rem; color: var(--text-dim); width: 12px; display: inline-block; text-align: center; }
         .node-group.expanded .chevron { transform: rotate(90deg); color: var(--cyber-blue); }
-        
         .sub-nodes-container { display: none; padding: 5px 0 5px 25px; background: rgba(0,0,0,0.15); border-left: 2px solid rgba(0, 242, 254, 0.2); margin-left: 5px; }
         .node-group.expanded .sub-nodes-container { display: block; }
-        
         .sub-node-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 15px 12px 0; border-bottom: 1px solid rgba(255,255,255,0.02); }
         .sub-node-item:last-child { border-bottom: none; }
         .sub-node-name { font-size: 0.85rem; color: #cbd5e1; }
         .sub-count { font-size: 0.75rem; color: var(--text-dim); font-family: monospace; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 10px; margin-right: 10px;}
         .sub-count.completed { color: var(--cyber-green); background: rgba(0,255,135,0.1); border: 1px solid rgba(0,255,135,0.3); }
-
         .node-name { font-size: 0.95rem; color: #fff; line-height: 1.4; transition: color 0.3s; }
         .node-name.type-main { color: #e2e8f0; } 
         .node-name.type-branch { color: var(--cyber-blue); font-size: 0.9rem; } 
@@ -161,10 +159,16 @@
 
     <header>
         <h1>CYBER - DECK</h1>
-        <div class="subtitle">神经漫游者终端 V5.2</div>
-        
-        <div class="settings-bar">
-            <button class="cyber-btn" id="settingsToggleBtn" onclick="toggleSettings()">⚙️ 展开控制面板</button>
+        <div class="header-sub-row">
+            <div class="subtitle">神经漫游者终端 V5.3</div>
+            <div class="header-actions">
+                <button class="icon-btn" id="searchToggleBtn" onclick="toggleSearch()">⌕</button>
+                <button class="icon-btn" id="settingsToggleBtn" onclick="toggleSettings()">◈</button>
+            </div>
+        </div>
+
+        <div class="search-container" id="searchContainer">
+            <input type="text" id="searchInput" class="search-input" placeholder="输入关键字检索库内游戏...">
         </div>
 
         <div class="cloud-console" id="settingsConsole">
@@ -173,10 +177,9 @@
             <button class="cyber-btn" onclick="document.getElementById('importFile').click()">📂 导入</button>
             <button class="cyber-btn btn-sync" onclick="openSyncModal()">🌐 同步</button>
             <button class="cyber-btn" style="border-color: var(--cyber-green); color: var(--cyber-green);" onclick="addNewGameFromJSON()">➕ JSON录入</button>
-            <button class="cyber-btn btn-stats" onclick="toggleDashboard()">📊 热力图</button>
+            <button class="cyber-btn btn-stats" onclick="toggleDashboard()">📊 数据台</button>
         </div>
 
-        <input type="text" id="searchInput" class="search-input" placeholder="输入关键字检索库内游戏...">
         <div class="filter-container" id="filterContainer"></div>
     </header>
 
@@ -212,6 +215,7 @@
 
     <div class="grid-container" id="libraryContainer"></div>
 
+    <!-- 游戏详情抽屉 -->
     <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
     <div class="drawer" id="detailDrawer">
         <div class="drawer-header">
@@ -219,9 +223,7 @@
             <div class="drawer-game-title" id="drawerGameTitle">游戏名称</div>
             <div class="drawer-game-meta">
                 <span id="drawerGameMeta">分类 / 节点类型</span>
-                <div class="status-selector" id="drawerStatusContainer">
-                    <!-- JS 动态注入状态选项 -->
-                </div>
+                <div class="status-selector" id="drawerStatusContainer"></div>
             </div>
         </div>
         <div class="detail-progress-section">
@@ -236,6 +238,7 @@
         <div class="node-list" id="nodeListContainer"></div>
     </div>
 
+    <!-- GitHub 同步面板 -->
     <div class="drawer-overlay" id="syncOverlay" onclick="closeSyncModal()"></div>
     <div class="sync-modal" id="syncModal">
         <h3>☁️ 神经连接配置 (GitHub API)</h3>
@@ -255,25 +258,26 @@
         let gameData = JSON.parse(localStorage.getItem('cyber_deck_progress_v4_final')) || [];
         let currentActiveGameId = null;
         let activeFilter = 'All'; 
+        let longPressTimer;
 
-        // 设置面板切换
+        // UI 切换
         function toggleSettings() {
             const consoleEl = document.getElementById('settingsConsole');
             const btnEl = document.getElementById('settingsToggleBtn');
-            if (consoleEl.classList.contains('active')) {
-                consoleEl.classList.remove('active');
-                btnEl.innerText = '⚙️ 展开控制面板';
-                btnEl.style.borderColor = 'var(--text-dim)';
-                btnEl.style.color = 'var(--text-main)';
-            } else {
-                consoleEl.classList.add('active');
-                btnEl.innerText = '⚙️ 收起控制面板';
-                btnEl.style.borderColor = 'var(--cyber-blue)';
-                btnEl.style.color = 'var(--cyber-blue)';
+            consoleEl.classList.toggle('active');
+            btnEl.classList.toggle('active');
+        }
+
+        function toggleSearch() {
+            const searchContainer = document.getElementById('searchContainer');
+            const btnEl = document.getElementById('searchToggleBtn');
+            searchContainer.classList.toggle('active');
+            btnEl.classList.toggle('active');
+            if(searchContainer.classList.contains('active')) {
+                document.getElementById('searchInput').focus();
             }
         }
 
-        // 工具函数：获取格式化的今日日期 YYYY-MM-DD
         function getTodayString() {
             const d = new Date();
             return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
@@ -281,16 +285,12 @@
 
         function saveData() { 
             localStorage.setItem('cyber_deck_progress_v4_final', JSON.stringify(gameData)); 
-            if (document.getElementById('dashboardPanel').classList.contains('active')) {
-                renderDashboard();
-            }
+            if (document.getElementById('dashboardPanel').classList.contains('active')) renderDashboard();
         }
 
         function calculatePercent(game) {
             if (!game.nodes || game.nodes.length === 0) return 0;
-            let total = 0;
-            let completed = 0;
-
+            let total = 0, completed = 0;
             game.nodes.forEach((node, index) => {
                 if (node.subNodes && node.subNodes.length > 0) {
                     total += node.subNodes.length;
@@ -300,23 +300,19 @@
                     if (game.progress && game.progress[index]) completed += 1;
                 }
             });
-            
             if (total === 0) return 0;
             return Math.round((completed / total) * 100);
         }
 
-        // --- 核心：状态解析引擎 (向下兼容架构) ---
         function getGameStatus(game) {
             const pct = calculatePercent(game);
             if (pct === 100) return { id: 'completed', label: '🎖️ 通关', class: 'badge-completed', cardClass: 'status-completed' };
-
             let currentStatus = game.status;
             if (!currentStatus) {
                 if (game.shelved === true) currentStatus = 'shelved';
                 else if (pct > 0) currentStatus = 'playing';
                 else currentStatus = 'backlog';
             }
-
             if (currentStatus === 'shelved') return { id: 'shelved', label: '🧊 吃灰', class: 'badge-shelved', cardClass: 'status-shelved' };
             if (currentStatus === 'playing') return { id: 'playing', label: '🎮 近期玩', class: 'badge-playing', cardClass: 'status-playing' };
             return { id: 'backlog', label: '⏳ 待玩', class: 'badge-backlog', cardClass: 'status-backlog' };
@@ -332,7 +328,7 @@
             renderLibrary(document.getElementById('searchInput').value);
         }
 
-        // --- 数据看板与热力图引擎 ---
+        // Dashboard & Heatmap
         function toggleDashboard() {
             const panel = document.getElementById('dashboardPanel');
             panel.classList.toggle('active');
@@ -341,13 +337,7 @@
 
         function renderDashboard() {
             if (gameData.length === 0) return;
-
-            let totalGames = gameData.length;
-            let completedGames = 0;
-            let playingGames = 0;
-            let totalNodesAll = 0;
-            let completedNodesAll = 0;
-            
+            let totalGames = gameData.length, completedGames = 0, playingGames = 0, totalNodesAll = 0, completedNodesAll = 0;
             const activityLog = {}; 
             let totalActivityCount = 0;
 
@@ -355,7 +345,6 @@
                 const statusObj = getGameStatus(game);
                 if (statusObj.id === 'completed') completedGames++;
                 if (statusObj.id === 'playing') playingGames++;
-
                 game.nodes.forEach((node, i) => {
                     if (node.subNodes && node.subNodes.length > 0) {
                         totalNodesAll += node.subNodes.length;
@@ -383,57 +372,43 @@
             document.getElementById('statCompleted').innerText = completedGames;
             document.getElementById('statPlaying').innerText = playingGames;
             document.getElementById('heatmapTotalNode').innerText = `${totalActivityCount} 次节点同步记录`;
-            
             const overallRate = totalNodesAll === 0 ? 0 : Math.round((completedNodesAll / totalNodesAll) * 100);
             document.getElementById('statCompletionRate').innerText = `${overallRate}%`;
 
             const heatmapGrid = document.getElementById('heatmapGrid');
             heatmapGrid.innerHTML = '';
-            
             const today = new Date();
             const startDate = new Date(today);
             startDate.setDate(today.getDate() - 180);
             startDate.setDate(startDate.getDate() - startDate.getDay()); 
-
             let currDate = new Date(startDate);
             let colsHtml = '';
 
             while (currDate <= today || currDate.getDay() !== 0) {
                 if (currDate.getDay() === 0) colsHtml += `<div class="heatmap-col">`;
-
                 const dateStr = currDate.getFullYear() + '-' + String(currDate.getMonth() + 1).padStart(2, '0') + '-' + String(currDate.getDate()).padStart(2, '0');
                 const logs = activityLog[dateStr] || [];
                 const count = logs.length;
-                
                 let level = 0;
-                if (count === 1) level = 1;
-                else if (count >= 2 && count <= 3) level = 2;
-                else if (count >= 4 && count <= 6) level = 3;
-                else if (count > 6) level = 4;
-
+                if (count === 1) level = 1; else if (count >= 2 && count <= 3) level = 2; else if (count >= 4 && count <= 6) level = 3; else if (count > 6) level = 4;
                 let hoverTitle = dateStr;
                 if (count > 0) {
-                    hoverTitle = `${dateStr} // 完成 ${count} 项神经链接&#10;` + 
-                                 logs.slice(0, 10).map(l => `▪ ${l}`).join('&#10;');
+                    hoverTitle = `${dateStr} // 完成 ${count} 项神经链接&#10;` + logs.slice(0, 10).map(l => `▪ ${l}`).join('&#10;');
                     if (count > 10) hoverTitle += '&#10;... 及更多';
                 }
-
                 colsHtml += `<div class="heatmap-cell level-${level}" title="${hoverTitle}"></div>`;
-
                 if (currDate.getDay() === 6) colsHtml += `</div>`; 
                 currDate.setDate(currDate.getDate() + 1);
                 if (currDate > today && currDate.getDay() === 0) break;
             }
-
             heatmapGrid.innerHTML = colsHtml;
         }
 
-        // --- 主体渲染逻辑 ---
+        // Library Render
         function renderFilters() {
             const container = document.getElementById('filterContainer');
             container.innerHTML = '';
             if (gameData.length === 0) return; 
-
             const uniqueCategories = [...new Set(gameData.map(g => g.category))].sort();
             const filters = [
                 { id: 'All', label: '全部宇宙' },
@@ -443,7 +418,6 @@
                 { id: 'Status_Shelved', label: '🧊 吃灰', className: 'special-shelved' },
                 { id: 'Status_Completed', label: '🎖️ 通关', className: 'special-completed' }
             ];
-
             filters.forEach(f => {
                 const tag = document.createElement('div');
                 tag.className = `filter-tag ${f.className || ''} ${activeFilter === f.id ? 'active' : ''}`;
@@ -460,51 +434,31 @@
         function renderLibrary(filterText = '') {
             const container = document.getElementById('libraryContainer');
             container.innerHTML = '';
-
             if (gameData.length === 0) {
-                container.innerHTML = `<div class="empty-state">数据库当前为空。<br><br>请点击顶部【⚙️ 展开控制面板】配置并同步云端数据。</div>`;
+                container.innerHTML = `<div class="empty-state">数据库当前为空。<br><br>请点击顶部【◈】展开设置同步云端数据。</div>`;
                 return;
             }
-
-            // 权重映射：1.近期玩 2.待玩 3.吃灰 4.通关 (数字越小，排越上面)
-            const statusWeights = {
-                'playing': 1,
-                'backlog': 2,
-                'shelved': 3,
-                'completed': 4
-            };
-
+            const statusWeights = { 'playing': 1, 'backlog': 2, 'shelved': 3, 'completed': 4 };
             const displayGames = gameData.filter(game => {
                 const statusObj = getGameStatus(game);
-
                 if (filterText && !game.name.toLowerCase().includes(filterText.toLowerCase())) return false;
-                
                 if (activeFilter.startsWith('Status_')) {
-                    const targetStatusId = activeFilter.split('_')[1].toLowerCase();
-                    if (statusObj.id !== targetStatusId) return false;
+                    if (statusObj.id !== activeFilter.split('_')[1].toLowerCase()) return false;
                 } else if (activeFilter !== 'All' && game.category !== activeFilter) {
                     return false;
                 }
-
                 return true; 
-            }).sort((a, b) => {
-                // 按照状态权重进行排序，同状态维持原数据流顺序
-                const weightA = statusWeights[getGameStatus(a).id];
-                const weightB = statusWeights[getGameStatus(b).id];
-                return weightA - weightB;
-            });
+            }).sort((a, b) => statusWeights[getGameStatus(a).id] - statusWeights[getGameStatus(b).id]);
 
             displayGames.forEach(game => {
                 const pct = calculatePercent(game);
                 const statusObj = getGameStatus(game);
-                
                 const card = document.createElement('div');
                 card.className = `game-card ${statusObj.cardClass}`;
                 card.onclick = () => openDrawer(game.id);
 
                 const badgeHtml = `<div class="badge-status ${statusObj.class}">${statusObj.label}</div>`;
                 const posterHtml = game.cover ? `<img src="${game.cover}" class="poster-img">` : `<div class="poster-placeholder">⍜</div>`;
-
                 card.innerHTML = `
                     <div class="poster-wrapper">${badgeHtml}${posterHtml}</div>
                     <div class="game-info">
@@ -519,16 +473,12 @@
             });
         }
 
+        // --- 游戏抽屉功能 ---
         function renderDrawerStatus(game) {
             const container = document.getElementById('drawerStatusContainer');
             const pct = calculatePercent(game);
             const statusObj = getGameStatus(game);
-
-            if (pct === 100) {
-                container.innerHTML = `<div class="status-btn completed-static">🎖️ 通关深度达成 (100%)</div>`;
-                return;
-            }
-
+            if (pct === 100) { container.innerHTML = `<div class="status-btn completed-static">🎖️ 通关深度达成 (100%)</div>`; return; }
             container.innerHTML = `
                 <div class="status-btn ${statusObj.id === 'backlog' ? 'active backlog' : ''}" onclick="setGameStatus('${game.id}', 'backlog')">⏳ 待玩</div>
                 <div class="status-btn ${statusObj.id === 'playing' ? 'active playing' : ''}" onclick="setGameStatus('${game.id}', 'playing')">🎮 近期玩</div>
@@ -539,14 +489,11 @@
         function openDrawer(gameId) {
             currentActiveGameId = gameId;
             const game = gameData.find(g => g.id === gameId);
-            
             document.getElementById('drawerGameTitle').innerText = game.name;
             document.getElementById('drawerGameMeta').childNodes[0].nodeValue = `${game.category} // ${game.unit}`;
-            
             renderDrawerStatus(game);
             updateDrawerProgress(game);
             renderNodeList(game);
-
             document.getElementById('drawerOverlay').classList.add('active');
             document.getElementById('detailDrawer').classList.add('active');
         }
@@ -561,29 +508,17 @@
             const pct = calculatePercent(game);
             document.getElementById('detailProgressPercent').innerText = `${pct}%`;
             document.getElementById('detailProgressFill').style.width = `${pct}%`;
-            
-            if (pct === 100) {
-                game.status = 'completed';
-                game.shelved = false;
-                saveData();
-                renderDrawerStatus(game);
-            } else if (game.status === 'completed') {
-                game.status = 'playing';
-                saveData();
-                renderDrawerStatus(game);
-            }
+            if (pct === 100) { game.status = 'completed'; game.shelved = false; saveData(); renderDrawerStatus(game);
+            } else if (game.status === 'completed') { game.status = 'playing'; saveData(); renderDrawerStatus(game); }
         }
 
         function renderNodeList(game) {
             const container = document.getElementById('nodeListContainer');
             container.innerHTML = '';
-
             game.nodes.forEach((node, index) => {
                 const hasSubNodes = node.subNodes && node.subNodes.length > 0;
-                
                 const group = document.createElement('div');
                 group.className = 'node-group';
-
                 const header = document.createElement('div');
                 header.className = 'node-header';
 
@@ -591,140 +526,89 @@
                     const subCompleted = node.subNodes.filter(sn => sn.completed).length;
                     const subTotal = node.subNodes.length;
                     const isAllDone = subCompleted === subTotal;
-
                     header.innerHTML = `
-                        <div class="node-header-left">
-                            <span class="chevron">▶</span>
-                            <span class="node-name ${node.type} ${isAllDone ? 'all-done' : ''}">${node.title}</span>
-                        </div>
-                        <div style="display: flex; align-items: center;">
-                            <span class="sub-count ${isAllDone ? 'completed' : ''}">${subCompleted}/${subTotal}</span>
-                            <input type="checkbox" class="cyber-checkbox parent-checkbox" ${isAllDone ? 'checked' : ''}>
-                        </div>
-                    `;
+                        <div class="node-header-left"><span class="chevron">▶</span><span class="node-name ${node.type} ${isAllDone ? 'all-done' : ''}">${node.title}</span></div>
+                        <div style="display: flex; align-items: center;"><span class="sub-count ${isAllDone ? 'completed' : ''}">${subCompleted}/${subTotal}</span><input type="checkbox" class="cyber-checkbox parent-checkbox" ${isAllDone ? 'checked' : ''}></div>`;
                     
                     const subContainer = document.createElement('div');
                     subContainer.className = 'sub-nodes-container';
                     const parentCb = header.querySelector('.parent-checkbox');
-                    
                     parentCb.onclick = (e) => e.stopPropagation(); 
                     parentCb.onchange = (e) => {
                         const checked = e.target.checked;
                         const today = getTodayString();
-                        
-                        node.subNodes.forEach(sn => {
-                            sn.completed = checked;
-                            sn.completedDate = checked ? (sn.completedDate || today) : null;
-                        });
-                        
+                        node.subNodes.forEach(sn => { sn.completed = checked; sn.completedDate = checked ? (sn.completedDate || today) : null; });
                         if (checked && game.status === 'backlog') game.status = 'playing';
-
-                        saveData();
-                        updateDrawerProgress(game);
-                        
+                        saveData(); updateDrawerProgress(game);
                         const subCheckboxes = subContainer.querySelectorAll('input[type="checkbox"]');
                         subCheckboxes.forEach(cb => cb.checked = checked);
-                        
                         const countEl = header.querySelector('.sub-count');
                         const nameEl = header.querySelector('.node-name');
-                        
                         countEl.innerText = `${checked ? subTotal : 0}/${subTotal}`;
-                        if (checked) { countEl.classList.add('completed'); nameEl.classList.add('all-done'); } 
-                        else { countEl.classList.remove('completed'); nameEl.classList.remove('all-done'); }
+                        if (checked) { countEl.classList.add('completed'); nameEl.classList.add('all-done'); } else { countEl.classList.remove('completed'); nameEl.classList.remove('all-done'); }
                     };
 
                     node.subNodes.forEach(subNode => {
                         const subItem = document.createElement('div');
                         subItem.className = 'sub-node-item';
                         subItem.innerHTML = `<span class="sub-node-name">${subNode.title}</span>`;
-                        
                         const checkbox = document.createElement('input');
                         checkbox.type = 'checkbox';
                         checkbox.className = 'cyber-checkbox';
                         checkbox.checked = subNode.completed || false;
-                        
                         checkbox.onchange = (e) => {
                             subNode.completed = e.target.checked;
                             subNode.completedDate = e.target.checked ? getTodayString() : null;
-                            
                             if (e.target.checked && game.status === 'backlog') game.status = 'playing';
-
-                            saveData();
-                            updateDrawerProgress(game);
-                            
+                            saveData(); updateDrawerProgress(game);
                             const newSubCompleted = node.subNodes.filter(sn => sn.completed).length;
                             const countEl = header.querySelector('.sub-count');
                             const nameEl = header.querySelector('.node-name');
-                            
                             countEl.innerText = `${newSubCompleted}/${subTotal}`;
-                            
                             const allSubDone = newSubCompleted === subTotal;
                             parentCb.checked = allSubDone; 
-                            
-                            if (allSubDone) { countEl.classList.add('completed'); nameEl.classList.add('all-done'); } 
-                            else { countEl.classList.remove('completed'); nameEl.classList.remove('all-done'); }
+                            if (allSubDone) { countEl.classList.add('completed'); nameEl.classList.add('all-done'); } else { countEl.classList.remove('completed'); nameEl.classList.remove('all-done'); }
                         };
-                        
                         subItem.appendChild(checkbox);
                         subContainer.appendChild(subItem);
                     });
-
                     header.onclick = (e) => { if (e.target.type !== 'checkbox') group.classList.toggle('expanded'); };
-
-                    group.appendChild(header);
-                    group.appendChild(subContainer);
+                    group.appendChild(header); group.appendChild(subContainer);
                 } else {
                     header.style.cursor = 'default';
                     const isChecked = game.progress ? (game.progress[index] || false) : false;
-                    
-                    header.innerHTML = `
-                        <div class="node-header-left" style="padding-left: 10px;">
-                            <span class="node-name ${node.type} ${isChecked ? 'all-done' : ''}">${node.title}</span>
-                        </div>
-                    `;
-
+                    header.innerHTML = `<div class="node-header-left" style="padding-left: 10px;"><span class="node-name ${node.type} ${isChecked ? 'all-done' : ''}">${node.title}</span></div>`;
                     const checkbox = document.createElement('input');
                     checkbox.type = 'checkbox';
                     checkbox.className = 'cyber-checkbox';
                     checkbox.checked = isChecked;
-                    
                     checkbox.onchange = (e) => {
                         if (!game.progress) game.progress = [];
                         game.progress[index] = e.target.checked;
-                        
                         if (!game.progressDates) game.progressDates = {};
                         game.progressDates[index] = e.target.checked ? getTodayString() : null;
-                        
                         if (e.target.checked && game.status === 'backlog') game.status = 'playing';
-
-                        saveData();
-                        updateDrawerProgress(game);
-                        
+                        saveData(); updateDrawerProgress(game);
                         const nameEl = header.querySelector('.node-name');
-                        if (e.target.checked) nameEl.classList.add('all-done');
-                        else nameEl.classList.remove('all-done');
+                        if (e.target.checked) nameEl.classList.add('all-done'); else nameEl.classList.remove('all-done');
                     };
-
-                    header.appendChild(checkbox);
-                    group.appendChild(header);
+                    header.appendChild(checkbox); group.appendChild(header);
                 }
-
                 container.appendChild(group);
             });
         }
 
         document.getElementById('searchInput').addEventListener('input', (e) => renderLibrary(e.target.value));
 
+        // GitHub 云端通讯
         function exportData() {
             if (gameData.length === 0) return alert("当前数据库为空，无法导出。");
             const dataStr = JSON.stringify(gameData, null, 2);
             const blob = new Blob([dataStr], { type: "application/json" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url;
-            a.download = `cyber_deck_backup_${new Date().getTime()}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
+            a.href = url; a.download = `cyber_deck_backup_${new Date().getTime()}.json`;
+            a.click(); URL.revokeObjectURL(url);
         }
 
         function importData(event) {
@@ -735,19 +619,13 @@
                 try {
                     const importedData = JSON.parse(e.target.result);
                     if (Array.isArray(importedData)) {
-                        gameData = importedData;
-                        saveData();
-                        renderFilters();
-                        renderLibrary();
+                        gameData = importedData; saveData(); renderFilters(); renderLibrary();
                         if (document.getElementById('dashboardPanel').classList.contains('active')) renderDashboard();
                         alert("✅ 本地数据已成功导入！");
                     }
-                } catch (error) {
-                    alert("❌ JSON 文件格式有误，导入失败。");
-                }
+                } catch (error) { alert("❌ JSON 文件格式有误，导入失败。"); }
             };
-            reader.readAsText(file);
-            event.target.value = ''; 
+            reader.readAsText(file); event.target.value = ''; 
         }
 
         function addNewGameFromJSON() {
@@ -755,51 +633,28 @@
             if (!jsonString) return; 
             try {
                 const newGame = JSON.parse(jsonString);
-                if (!newGame.id || !newGame.name || !newGame.nodes || !Array.isArray(newGame.nodes)) {
-                    alert("❌ 录入失败：JSON 格式缺少必要字段 (需包含 id, name, nodes 数组)！");
-                    return;
-                }
-
+                if (!newGame.id || !newGame.name || !newGame.nodes || !Array.isArray(newGame.nodes)) { alert("❌ 录入失败：缺少必要字段！"); return; }
                 const existingIndex = gameData.findIndex(g => g.id === newGame.id);
-                
                 if (existingIndex !== -1) {
-                    const confirmUpdate = confirm(`⚠️ 发现库中已有 [${newGame.name}]。\n\n是否要用这份更详细的章节数据【覆盖升级】旧数据？\n(注意：这会重置该游戏的打勾进度)`);
-                    if (!confirmUpdate) return;
-                    
-                    if (!newGame.progress || newGame.progress.length !== newGame.nodes.length) {
-                        newGame.progress = new Array(newGame.nodes.length).fill(false);
-                    }
+                    if (!confirm(`⚠️ 发现库中已有 [${newGame.name}]。是否要覆盖升级？`)) return;
+                    if (!newGame.progress || newGame.progress.length !== newGame.nodes.length) newGame.progress = new Array(newGame.nodes.length).fill(false);
                     if (typeof newGame.shelved !== 'boolean') newGame.shelved = false;
                     if (!newGame.status) newGame.status = 'backlog';
-                    
                     gameData[existingIndex] = newGame; 
-                    alert(`✅ 升级成功：已将 [${newGame.name}] 细化为子章节模式！`);
+                    alert(`✅ 升级成功！`);
                 } else {
-                    if (!newGame.progress || newGame.progress.length !== newGame.nodes.length) {
-                        newGame.progress = new Array(newGame.nodes.length).fill(false);
-                    }
+                    if (!newGame.progress || newGame.progress.length !== newGame.nodes.length) newGame.progress = new Array(newGame.nodes.length).fill(false);
                     if (typeof newGame.shelved !== 'boolean') newGame.shelved = false;
                     if (!newGame.status) newGame.status = 'backlog';
-                    
                     gameData.unshift(newGame); 
-                    alert(`✅ 录入成功：${newGame.name}`);
+                    alert(`✅ 录入成功！`);
                 }
-                
-                saveData(); 
-                renderFilters();
-                renderLibrary(document.getElementById('searchInput').value);
-
-                if(confirm("是否立即将此次数据的升级变动【⬆️ 推送至 GitHub 云端】保存？\n(如果你已经配置好 Token，点击确定将自动上传)")) {
-                    pushToGitHub();
-                }
-
-            } catch(e) {
-                alert("❌ 录入失败：JSON 解析错误，请检查是否有多余的逗号或缺失引号！\n错误信息：" + e.message);
-            }
+                saveData(); renderFilters(); renderLibrary(document.getElementById('searchInput').value);
+                if(confirm("是否立即将此次改动【⬆️ 推送至 GitHub 云端】保存？")) pushToGitHub();
+            } catch(e) { alert("❌ JSON 解析错误：" + e.message); }
         }
 
         const GH_CONFIG_KEY = 'cyber_deck_gh_config';
-
         function openSyncModal() {
             document.getElementById('syncOverlay').classList.add('active');
             document.getElementById('syncModal').classList.add('active');
@@ -835,74 +690,41 @@
                     headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' },
                     cache: "no-store"
                 });
-                if (!response.ok) throw new Error("拉取失败，请检查填写的信息是否完全正确，或仓库是否创建。");
-                
+                if (!response.ok) throw new Error("拉取失败，请检查配置。");
                 const resData = await response.json();
                 const decodedContent = decodeURIComponent(escape(atob(resData.content)));
-                
                 gameData = JSON.parse(decodedContent);
-                saveData();
-                renderFilters();
-                renderLibrary();
+                saveData(); renderFilters(); renderLibrary();
                 if (document.getElementById('dashboardPanel').classList.contains('active')) renderDashboard();
-                alert("✅ 云端数据同步成功！");
-                closeSyncModal();
-            } catch (error) {
-                alert(error.message);
-            } finally {
-                document.querySelector('button[onclick="pullFromGitHub()"]').innerText = "⬇️ 从云端拉取";
-            }
+                alert("✅ 云端数据同步成功！"); closeSyncModal();
+            } catch (error) { alert(error.message); } finally { document.querySelector('button[onclick="pullFromGitHub()"]').innerText = "⬇️ 从云端拉取"; }
         }
 
         async function pushToGitHub() {
             const { token, owner, repo, path } = saveGhConfig();
-            if (!token || !owner || !repo || !path) {
-                alert("❌ 请先点击【🌐 同步】填写好你的 Token 和仓库信息！");
-                return;
-            }
-            if (gameData.length === 0) return alert("❌ 本地没有数据可供推送！");
-            
+            if (!token || !owner || !repo || !path) return alert("❌ 请先配置 GitHub API！");
+            if (gameData.length === 0) return alert("❌ 本地无数据！");
             const pushBtn1 = document.getElementById('pushBtn');
             if (pushBtn1) pushBtn1.innerText = "推送中...";
-            
             try {
                 let sha = null;
                 const getRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
-                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' },
-                    cache: "no-store"
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }, cache: "no-store"
                 });
-                if (getRes.ok) {
-                    const currentFile = await getRes.json();
-                    sha = currentFile.sha;
-                }
+                if (getRes.ok) { const currentFile = await getRes.json(); sha = currentFile.sha; }
                 const contentStr = JSON.stringify(gameData, null, 2);
                 const encodedContent = btoa(unescape(encodeURIComponent(contentStr)));
-                const putBody = {
-                    message: "CYBER-DECK: 更新状态与游戏进度",
-                    content: encodedContent,
-                    ...(sha && { sha }) 
-                };
                 const putRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
                     method: 'PUT',
-                    headers: { 
-                        'Authorization': `token ${token}`, 
-                        'Accept': 'application/vnd.github.v3+json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(putBody)
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: "CYBER-DECK: 更新状态与游戏进度", content: encodedContent, ...(sha && { sha }) })
                 });
-                if (!putRes.ok) throw new Error("推送失败，请检查 Token 权限。");
-                alert("✅ 成功推送至 GitHub 云端！你的数据安全了。");
-                closeSyncModal();
-            } catch (error) {
-                alert(error.message);
-            } finally {
-                if (pushBtn1) pushBtn1.innerText = "⬆️ 推送至云端";
-            }
+                if (!putRes.ok) throw new Error("推送失败，请检查 Token。");
+                alert("✅ 成功推送至 GitHub 云端！"); closeSyncModal();
+            } catch (error) { alert(error.message); } finally { if (pushBtn1) pushBtn1.innerText = "⬆️ 推送至云端"; }
         }
 
-        renderFilters();
-        renderLibrary();
+        renderFilters(); renderLibrary();
     </script>
 </body>
 </html>
