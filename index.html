@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CYBER-DECK // 神经漫游者终端 V5.1</title>
+    <title>CYBER-DECK // 神经漫游者终端 V5.2</title>
     <style>
         :root {
             --bg-color: #0a0c10; --panel-bg: #121620;
@@ -19,7 +19,11 @@
         header h1 { font-size: 1.4rem; letter-spacing: 3px; color: #fff; text-shadow: 0 0 10px var(--cyber-blue); font-weight: 900; }
         header .subtitle { font-size: 0.7rem; color: var(--cyber-pink); letter-spacing: 2px; margin-top: 5px; text-transform: uppercase; margin-bottom: 15px; }
 
-        .cloud-console { display: flex; gap: 8px; padding: 0 15px 15px; justify-content: center; flex-wrap: wrap; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 10px;}
+        .settings-bar { margin-bottom: 10px; }
+        .cloud-console { display: none; gap: 8px; padding: 0 15px 15px; justify-content: center; flex-wrap: wrap; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 10px; animation: fadeIn 0.3s ease-out; }
+        .cloud-console.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        
         .cyber-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--text-dim); color: var(--text-main); padding: 6px 10px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
         .cyber-btn:hover { border-color: var(--cyber-blue); color: var(--cyber-blue); background: rgba(0,242,254,0.1); }
         .btn-sync { border-color: var(--cyber-blue); color: var(--cyber-blue); }
@@ -79,7 +83,7 @@
         .poster-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: filter 0.3s; }
         .poster-placeholder { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1e2640 0%, #0f1322 100%); color: rgba(255,255,255,0.1); font-size: 2rem; }
 
-        /* 全新状态徽章系统 */
+        /* 状态徽章 */
         .badge-status { position: absolute; top: 5px; right: 5px; font-size: 0.6rem; padding: 3px 6px; font-weight: bold; border-radius: 4px; backdrop-filter: blur(2px); z-index: 10; display: flex; align-items: center; gap: 4px; border: 1px solid transparent; }
         .badge-completed { background: rgba(0, 255, 135, 0.2); border-color: var(--cyber-green); color: var(--cyber-green); box-shadow: 0 0 5px rgba(0, 255, 135, 0.5); }
         .badge-playing { background: rgba(0, 242, 254, 0.2); border-color: var(--cyber-blue); color: var(--cyber-blue); box-shadow: 0 0 5px rgba(0, 242, 254, 0.5); }
@@ -157,14 +161,18 @@
 
     <header>
         <h1>CYBER - DECK</h1>
-        <div class="subtitle">神经漫游者终端 V5.1</div>
+        <div class="subtitle">神经漫游者终端 V5.2</div>
         
-        <div class="cloud-console">
+        <div class="settings-bar">
+            <button class="cyber-btn" id="settingsToggleBtn" onclick="toggleSettings()">⚙️ 展开控制面板</button>
+        </div>
+
+        <div class="cloud-console" id="settingsConsole">
             <button class="cyber-btn" onclick="exportData()">💾 备份</button>
             <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)">
             <button class="cyber-btn" onclick="document.getElementById('importFile').click()">📂 导入</button>
             <button class="cyber-btn btn-sync" onclick="openSyncModal()">🌐 同步</button>
-            <button class="cyber-btn" style="border-color: var(--cyber-green); color: var(--cyber-green);" onclick="addNewGameFromJSON()">➕ JSON</button>
+            <button class="cyber-btn" style="border-color: var(--cyber-green); color: var(--cyber-green);" onclick="addNewGameFromJSON()">➕ JSON录入</button>
             <button class="cyber-btn btn-stats" onclick="toggleDashboard()">📊 热力图</button>
         </div>
 
@@ -212,7 +220,8 @@
             <div class="drawer-game-meta">
                 <span id="drawerGameMeta">分类 / 节点类型</span>
                 <div class="status-selector" id="drawerStatusContainer">
-                    </div>
+                    <!-- JS 动态注入状态选项 -->
+                </div>
             </div>
         </div>
         <div class="detail-progress-section">
@@ -246,6 +255,23 @@
         let gameData = JSON.parse(localStorage.getItem('cyber_deck_progress_v4_final')) || [];
         let currentActiveGameId = null;
         let activeFilter = 'All'; 
+
+        // 设置面板切换
+        function toggleSettings() {
+            const consoleEl = document.getElementById('settingsConsole');
+            const btnEl = document.getElementById('settingsToggleBtn');
+            if (consoleEl.classList.contains('active')) {
+                consoleEl.classList.remove('active');
+                btnEl.innerText = '⚙️ 展开控制面板';
+                btnEl.style.borderColor = 'var(--text-dim)';
+                btnEl.style.color = 'var(--text-main)';
+            } else {
+                consoleEl.classList.add('active');
+                btnEl.innerText = '⚙️ 收起控制面板';
+                btnEl.style.borderColor = 'var(--cyber-blue)';
+                btnEl.style.color = 'var(--cyber-blue)';
+            }
+        }
 
         // 工具函数：获取格式化的今日日期 YYYY-MM-DD
         function getTodayString() {
@@ -282,10 +308,8 @@
         // --- 核心：状态解析引擎 (向下兼容架构) ---
         function getGameStatus(game) {
             const pct = calculatePercent(game);
-            // 优先级1：如果100%，无条件视为通关
             if (pct === 100) return { id: 'completed', label: '🎖️ 通关', class: 'badge-completed', cardClass: 'status-completed' };
 
-            // 提取状态 (兼容旧版只有 shelved 布尔值的情况)
             let currentStatus = game.status;
             if (!currentStatus) {
                 if (game.shelved === true) currentStatus = 'shelved';
@@ -302,7 +326,7 @@
             const game = gameData.find(g => g.id === gameId);
             if (!game) return;
             game.status = newStatus;
-            game.shelved = (newStatus === 'shelved'); // 保持向下兼容旧数据的布尔值
+            game.shelved = (newStatus === 'shelved'); 
             saveData();
             renderDrawerStatus(game);
             renderLibrary(document.getElementById('searchInput').value);
@@ -324,7 +348,6 @@
             let totalNodesAll = 0;
             let completedNodesAll = 0;
             
-            // 深度热力图数据结构升级：记录具体游戏节点名称
             const activityLog = {}; 
             let totalActivityCount = 0;
 
@@ -364,14 +387,13 @@
             const overallRate = totalNodesAll === 0 ? 0 : Math.round((completedNodesAll / totalNodesAll) * 100);
             document.getElementById('statCompletionRate').innerText = `${overallRate}%`;
 
-            // 渲染热力图 
             const heatmapGrid = document.getElementById('heatmapGrid');
             heatmapGrid.innerHTML = '';
             
             const today = new Date();
             const startDate = new Date(today);
             startDate.setDate(today.getDate() - 180);
-            startDate.setDate(startDate.getDate() - startDate.getDay()); // 调至周日
+            startDate.setDate(startDate.getDate() - startDate.getDay()); 
 
             let currDate = new Date(startDate);
             let colsHtml = '';
@@ -389,7 +411,6 @@
                 else if (count >= 4 && count <= 6) level = 3;
                 else if (count > 6) level = 4;
 
-                // 构建具有详情信息的悬浮提示 (通过 HTML 编码规避引号破坏结构)
                 let hoverTitle = dateStr;
                 if (count > 0) {
                     hoverTitle = `${dateStr} // 完成 ${count} 项神经链接&#10;` + 
@@ -441,16 +462,23 @@
             container.innerHTML = '';
 
             if (gameData.length === 0) {
-                container.innerHTML = `<div class="empty-state">数据库当前为空。<br><br>请点击顶部【🌐 同步】配置并拉取您的云端数据。</div>`;
+                container.innerHTML = `<div class="empty-state">数据库当前为空。<br><br>请点击顶部【⚙️ 展开控制面板】配置并同步云端数据。</div>`;
                 return;
             }
+
+            // 权重映射：1.近期玩 2.待玩 3.吃灰 4.通关 (数字越小，排越上面)
+            const statusWeights = {
+                'playing': 1,
+                'backlog': 2,
+                'shelved': 3,
+                'completed': 4
+            };
 
             const displayGames = gameData.filter(game => {
                 const statusObj = getGameStatus(game);
 
                 if (filterText && !game.name.toLowerCase().includes(filterText.toLowerCase())) return false;
                 
-                // 状态类过滤拦截
                 if (activeFilter.startsWith('Status_')) {
                     const targetStatusId = activeFilter.split('_')[1].toLowerCase();
                     if (statusObj.id !== targetStatusId) return false;
@@ -459,6 +487,11 @@
                 }
 
                 return true; 
+            }).sort((a, b) => {
+                // 按照状态权重进行排序，同状态维持原数据流顺序
+                const weightA = statusWeights[getGameStatus(a).id];
+                const weightB = statusWeights[getGameStatus(b).id];
+                return weightA - weightB;
             });
 
             displayGames.forEach(game => {
@@ -529,14 +562,12 @@
             document.getElementById('detailProgressPercent').innerText = `${pct}%`;
             document.getElementById('detailProgressFill').style.width = `${pct}%`;
             
-            // 如果进度满了，自动转为通关状态
             if (pct === 100) {
                 game.status = 'completed';
                 game.shelved = false;
                 saveData();
                 renderDrawerStatus(game);
             } else if (game.status === 'completed') {
-                // 如果进度回退，取消通关状态
                 game.status = 'playing';
                 saveData();
                 renderDrawerStatus(game);
@@ -586,7 +617,6 @@
                             sn.completedDate = checked ? (sn.completedDate || today) : null;
                         });
                         
-                        // 自动调整状态为游玩中
                         if (checked && game.status === 'backlog') game.status = 'playing';
 
                         saveData();
